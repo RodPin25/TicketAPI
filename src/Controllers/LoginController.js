@@ -16,10 +16,15 @@ const authController = (req, res)=>{
         }
         
         //Hacemos uso del service para autenticar al usuario
-        //loginService.authService(req, res);
+        const authResult = loginService.authService(req,res);
+        if(authResult.result){
+            res.status(200).json({message: authResult.message, token:authResult.token})
+        } else {
+            res.status(401).json({message: authResult.message});
+        }
 
     } catch(error){
         console.error('Error in authController:', error);
-        res.status(500).json({message: 'Internal server error'});
+        res.status(500).json({message: 'Internal server error, generated on the Controller Layer'});
     }
 }

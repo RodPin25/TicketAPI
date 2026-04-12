@@ -7,3 +7,5 @@ yarn-error.log*
 logs/
 *.log
 coverage/
+
+/src/generated/prisma
