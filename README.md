@@ -1,36 +1,42 @@
 # Proyecto de Ingeniería de Software - Sistema de Gestión de Parqueadero
 
-Este es un sistema de gestión para el control de entrada, salida y cobro en un parqueadero, desarrollado con una arquitectura robusta y escalable en capas.
+Este proyecto es un sistema integral de gestión de parqueaderos, diseñado para automatizar el control de entradas, salidas, cobros y auditoría de vehículos. Ha evolucionado hacia una arquitectura más liviana y eficiente, optimizando la persistencia de datos y la seguridad del usuario.
 
-## 🚀 Tecnologías Utilizadas
+## 🚀 Tecnologías y Herramientas Actualizadas
 
 - **Backend:** Node.js con Express 5.
-- **Base de Datos:** SQL Server.
-- **ORM:** Prisma.
-- **Autenticación:** JSON Web Tokens (JWT).
-- **Gestión de Entorno:** Dotenv.
+- **Base de Datos:** SQL Server (utilizando el controlador nativo `mssql`).
+- **Seguridad:** 
+  - `bcrypt` para el hashing seguro de contraseñas.
+  - `jsonwebtoken` (JWT) para la autenticación y autorización de rutas.
+- **Validación:** Implementación de validaciones mediante expresiones regulares (Regex) para correos y contraseñas desde la capa de control.
+- **Gestión de Entorno:** `dotenv` para configuración de variables sensibles.
+- **Generación de Datos (Dev):** `@faker-js/faker` para pruebas y simulación de datos.
 
-## 🏗️ Arquitectura del Proyecto
+## 🏗️ Arquitectura del Proyecto (Actualizada)
 
-El proyecto sigue una arquitectura organizada por capas para separar las responsabilidades y facilitar el mantenimiento:
+El sistema se ha reestructurado para mejorar la separación de responsabilidades, migrando hacia una capa de Servicios más robusta:
 
-- **`src/Routes/`**: Define los puntos de entrada (endpoints) de la API y los asocia con sus controladores.
-- **`src/Controllers/`**: Maneja las solicitudes HTTP, realiza validaciones básicas (como Regex para correos y contraseñas) y envía las respuestas al cliente.
-- **`src/Services/`**: Contiene la lógica de negocio central, procesando datos y comunicándose con la capa de persistencia.
-- **`src/Repositories/`**: Encargado de las operaciones directas con la base de datos a través de Prisma.
-- **`src/Middlewares/`**: Funciones intermedias para tareas como autenticación y autorización mediante JWT.
-- **`src/Config/`**: Configuraciones globales del sistema, incluyendo la conexión a la base de datos.
+- **`src/Routes/`**: Define los endpoints de la API. Actualmente centralizado en `authRoutes.js`.
+- **`src/Controllers/`**: Maneja las solicitudes HTTP y realiza validaciones de entrada (ej. formato de email/password) antes de llamar a la lógica de negocio.
+- **`src/Services/`**: Contiene la lógica de negocio principal y las consultas directas a SQL Server. Se han añadido servicios para:
+  - `LoginService`: Gestión de autenticación y generación de tokens.
+  - `BrandService`: Administración de marcas de vehículos.
+  - `TypeService`: Clasificación de tipos de vehículos (Moto, Carro, etc.).
+  - `CarService` & `TicketService`: (En desarrollo) Gestión de vehículos y comprobantes de pago.
+- **`src/Middlewares/`**: 
+  - `AuthMiddleware`: Protección de rutas mediante verificación de tokens JWT.
+  - `logger.js`: **Nueva funcionalidad** para la auditoría del sistema, registrando acciones de usuario directamente en la base de datos.
+- **`src/Config/`**: Configuración centralizada de la conexión a SQL Server (`db.js`).
 
-## 📊 Modelo de Datos (Prisma)
+## 📊 Modelo de Datos y Auditoría
 
-El sistema cuenta con los siguientes modelos principales:
+Se han definido los siguientes componentes esenciales:
 
-- **Usuarios:** Gestión de acceso y roles (Admin/Operador).
-- **Tickets:** Registro de entradas, salidas, montos y estados de pago.
-- **Vehículos:** Información de placas y modelos.
-- **Marca y Modelos:** Clasificación detallada de los vehículos.
-- **Tipo de Vehículo:** Categorización (Moto, Carro, etc.).
-- **Configuración de Cobro:** Definición de tarifas por tiempo o tipo.
+- **Usuarios:** Control de acceso con roles (Admin/Operador).
+- **Vehículos & Marcas:** Gestión detallada de la flota y sus fabricantes.
+- **Tickets:** Registro de transacciones y estados de pago.
+- **Logs de Auditoría:** Registro de cada acción crítica realizada en el sistema (Creación de marcas, logins, etc.), incluyendo IP de origen y usuario responsable.
 
 ## 🛠️ Configuración e Instalación
 
@@ -39,24 +45,24 @@ El sistema cuenta con los siguientes modelos principales:
    npm install
    ```
 
-2. **Configurar el entorno:**
-   Crea un archivo `.env` en la raíz con las siguientes variables:
+2. **Variables de Entorno (.env):**
+   Configura un archivo `.env` en la raíz con los siguientes parámetros:
    ```env
-   DATABASE_URL="sqlserver://<host>:<port>;database=<db_name>;user=<user>;password=<password>;encrypt=true"
-   JWT_SECRET="tu_secreto_para_jwt"
+   DB_USER="tu_usuario"
+   DB_PASSWORD="tu_password"
+   DB_HOST="tu_host"
+   DB_NAME="tu_base_de_datos"
+   DB_PORT=1433
+   SECRET_KEY="tu_clave_secreta_jwt"
    EMAIL_REGEX="^[^\s@]+@[^\s@]+\.[^\s@]+$"
    PASSWORD_REGEX="^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$"
    ```
 
-3. **Generar el cliente de Prisma:**
-   ```bash
-   npx prisma generate
-   ```
+## 🔐 Seguridad y Validación
 
-## 🔐 Autenticación
-
-El sistema utiliza JWT para proteger las rutas. Para acceder a las funciones protegidas, se debe incluir el token en los encabezados de la solicitud:
-`Authorization: Bearer <token_jwt>`
+- **Contraseñas:** No se almacenan en texto plano; se utiliza `bcrypt` para garantizar la integridad de los datos.
+- **Tokens:** La autenticación se maneja vía `Bearer Token`. Las sesiones expiran automáticamente para mayor seguridad.
+- **Auditoría:** El sistema de logs permite rastrear cualquier actividad sospechosa o realizar seguimiento de operaciones.
 
 ---
-*Desarrollado como parte del curso de Ingeniería de Software.*
+*Documentación actualizada tras la migración de herramientas y corrección de bugs.*

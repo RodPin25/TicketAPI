@@ -1,18 +1,27 @@
-const { PrismaClient } = require("@prisma/client");
-const { PrismaSQLServer } = require("@prisma/adapter-sqlserver");
-require("dotenv").config();
+const { en } = require('@faker-js/faker');
+const SQL = require('mssql');
 
-const conectionString = process.env.DATABASE_URL;
+require('dotenv').config();
 
-let prisma;
+const config = {
+    user: process.env.DB_USER,
+    password: process.env.DB_PASSWORD,
+    server: process.env.DB_HOST,
+    port: parseInt(process.env.DB_PORT),
+    database: process.env.DB_NAME,
+    options: {
+        encrypt: true,
+        trustServerCertificate: true,
+    },
+};
 
-try{
-    const adapter = new PrismaSQLServer(conectionString);
-    prisma = new PrismaClient({ adapter });
+const PoolPromise =  new SQL.ConnectionPool(config).connect().then(pool =>{
+    console.log('[INFO] Database connected successfully');
+    return pool;
+}).catch(err => {
+    console.error('[ERROR] Database connection failed: ', err);
+});
 
-    console.log("[INFO] Database connection established successfully.");
-} catch(err){
-    console.error("[ERROR] Failed to connect to the database:", err);
-}
-
-module.exports = prisma;
+module.exports = {
+    SQL,PoolPromise
+}; 

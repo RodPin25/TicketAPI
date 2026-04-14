@@ -1,24 +1,34 @@
 const jwt = require('jsonwebtoken');
+const { pool, sql } = require('../config/dbConfig');
+const bcrypt = require('bcrypt');
 
-const authService = (req,res)=>{
+const authService = async (req,res)=>{
     try{
-        const {email, password} = req.body;
+        const {username, password} = req.body;
 
-        //Logica provisional para login
-        if(email === 'admin@example.com' && password === 'password'){
-            
-            //Creamos el Payload con la informacion del usuario
-            const userPayload = {
+        const pool = await PoolPromise;
+        const result = await pool.request()
+            .input('username',sql.Varchar,username)
+            .query('SELECT * FROM Usuarios WHERE username = @username');
+
+        const userInfo = result.recordset[0];
+
+        if(!userInfo) return {result: false, message: 'User not found'};
+
+        const passwordMatch = await bcrypt.compare(password, userInfo.password);
+        
+        if(!passwordMatch) return {result: false, message: 'Invalid credentials'};
+
+        //Creamos el Payload con la informacion del usuario
+        const userPayload = {
             email: email,
-            role: 'admin'
-            };
+            role: 'admin',
+            userId: userInfo.idUser
+        };
 
-            //Generamos el token con el Payload y la clave secreta
-            const token = jwt.sign(userPayload, process.env.SECRET_KEY, {expiresIn: '3h'});
-            return {result: true, message: 'Authentication successful, token generated', token: token};
-        } else {
-            return {result: false, message: 'Invalid credentials'};
-        }
+        //Generamos el token con el Payload y la clave secreta
+        const token = jwt.sign(userPayload, process.env.SECRET_KEY, {expiresIn: '3h'});
+        return {result: true, message: 'Authentication successful, token generated', token: token};
     } catch(error){
         console.error('Error in authService:', error);
         return {result: false, message: 'Internal Server error, error Generated on the Service Layer'};
