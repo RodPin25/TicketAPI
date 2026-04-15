@@ -1,4 +1,3 @@
-const { en } = require('@faker-js/faker');
 const SQL = require('mssql');
 
 require('dotenv').config();

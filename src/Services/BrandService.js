@@ -1,5 +1,6 @@
 //Servicio para crear Marcas
 import { pool,sql } from '../config/dbConfig';
+import { saveLog } from '../Middlewares/logger';
 
 const createBrandService = async (req, res) =>{
     try{

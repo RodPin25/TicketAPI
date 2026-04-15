@@ -2,6 +2,9 @@ const jwt = require('jsonwebtoken');
 const { pool, sql } = require('../config/dbConfig');
 const bcrypt = require('bcrypt');
 
+//Importamos el logger
+import { saveLog } from '../Middlewares/logger';
+
 const authService = async (req,res)=>{
     try{
         const {username, password} = req.body;
@@ -28,6 +31,11 @@ const authService = async (req,res)=>{
 
         //Generamos el token con el Payload y la clave secreta
         const token = jwt.sign(userPayload, process.env.SECRET_KEY, {expiresIn: '3h'});
+
+        //Generamos un log
+        await saveLog(userPayload.userId, 'LOGIN', `User with email: ${email} logged in successfully`, req.ip);
+
+        console.log("[INFO] authService: User authenticated successfully with email:", email);
         return {result: true, message: 'Authentication successful, token generated', token: token};
     } catch(error){
         console.error('Error in authService:', error);

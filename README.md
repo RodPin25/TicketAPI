@@ -19,24 +19,26 @@ El sistema se ha reestructurado para mejorar la separación de responsabilidades
 
 - **`src/Routes/`**: Define los endpoints de la API. Actualmente centralizado en `authRoutes.js`.
 - **`src/Controllers/`**: Maneja las solicitudes HTTP y realiza validaciones de entrada (ej. formato de email/password) antes de llamar a la lógica de negocio.
-- **`src/Services/`**: Contiene la lógica de negocio principal y las consultas directas a SQL Server. Se han añadido servicios para:
+- **`src/Services/`**: Contiene la lógica de negocio principal y las consultas directas a SQL Server. Se han consolidado los siguientes servicios:
   - `LoginService`: Gestión de autenticación y generación de tokens.
-  - `BrandService`: Administración de marcas de vehículos.
+  - `BrandService` & `ModelService`: Administración de marcas y modelos específicos de vehículos.
   - `TypeService`: Clasificación de tipos de vehículos (Moto, Carro, etc.).
-  - `CarService` & `TicketService`: (En desarrollo) Gestión de vehículos y comprobantes de pago.
+  - `CarService`: Registro y gestión de vehículos en el sistema.
+  - `TicketService`: Generación de comprobantes de ingreso y control de estados de pago.
+  - `ConfigPay`: Configuración dinámica de tarifas y tipos de cobro.
 - **`src/Middlewares/`**: 
   - `AuthMiddleware`: Protección de rutas mediante verificación de tokens JWT.
-  - `logger.js`: **Nueva funcionalidad** para la auditoría del sistema, registrando acciones de usuario directamente en la base de datos.
-- **`src/Config/`**: Configuración centralizada de la conexión a SQL Server (`db.js`).
+  - `logger.js`: Sistema de auditoría centralizado que registra cada acción en la base de datos (IP, usuario, acción y descripción).
+- **`src/database/`**: Consultas optimizadas para la recuperación de información específica (ej. `InfoCobro.js`).
 
 ## 📊 Modelo de Datos y Auditoría
 
-Se han definido los siguientes componentes esenciales:
+El sistema garantiza la trazabilidad total mediante:
 
-- **Usuarios:** Control de acceso con roles (Admin/Operador).
-- **Vehículos & Marcas:** Gestión detallada de la flota y sus fabricantes.
-- **Tickets:** Registro de transacciones y estados de pago.
-- **Logs de Auditoría:** Registro de cada acción crítica realizada en el sistema (Creación de marcas, logins, etc.), incluyendo IP de origen y usuario responsable.
+- **Vehículos & Modelos:** Relación jerárquica entre Tipos, Marcas y Modelos para una clasificación precisa.
+- **Gestión de Tickets:** Control de flujo de caja y tiempos de permanencia.
+- **Configuración de Cobros:** Flexibilidad para ajustar tarifas sin modificar el código.
+- **Logs de Auditoría:** Registro obligatorio en cada servicio para acciones de creación, actualización o consulta sensible.
 
 ## 🛠️ Configuración e Instalación
 

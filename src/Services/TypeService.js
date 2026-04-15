@@ -1,5 +1,6 @@
 //Servicio para poder guardar los tipos de vehiculos
 import { pool,sql } from '../config/dbConfig';
+import { saveLog } from '../Middlewares/logger';
 
 const createService= async(req, res)=>{
     try{
