@@ -1,5 +1,4 @@
 //Archivo para generar Logs
-const { act } = require('react');
 const {pool, sql} = require('../config/dbConfig');
 
 const saveLog = async (idUser, action, description, ip) => {
