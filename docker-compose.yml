@@ -1,0 +1,18 @@
+services:
+  ticket-api:
+    build: .
+    container_name: ticket_backend
+    ports:
+      - "3000:3000"
+    env_file:
+      - .env
+    restart: always
+    # Esto es útil si tu SQL Server está fuera de Docker (en tu host)
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    networks:
+      - ticket-network
+
+networks:
+  ticket-network:
+    driver: bridge
