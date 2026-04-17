@@ -1,5 +1,5 @@
 //Archivo para generar Logs
-const {pool, SQL} = require('../Config/db');
+const {PoolPromise, SQL} = require('../config/db');
 
 const saveLog = async (idUser, action, description, ip) => {
     try{

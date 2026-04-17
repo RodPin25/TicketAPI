@@ -1,5 +1,5 @@
 //Servicio para crear Marcas
-const { SQL, PoolPromise } = require('../Config/db');
+const { SQL, PoolPromise } = require('../config/db');
 
 
 const createBrandService = async (req, res) =>{

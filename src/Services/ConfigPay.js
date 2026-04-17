@@ -1,5 +1,5 @@
 //Servicio para poder guardar la configuracion de pago
-const { SQL, PoolPromise } = require('../Config/db');
+const { SQL, PoolPromise } = require('../config/db');
 const { saveLog } = require('../Middlewares/logger');
 
 const createService= async(req, res)=>{

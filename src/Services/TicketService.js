@@ -1,5 +1,5 @@
 //Servicio para los tickets
-const { SQL, PoolPromise } = require('../Config/db');
+const { SQL, PoolPromise } = require('../config/db');
 
 const createService = async(req, res)=>{
     try{

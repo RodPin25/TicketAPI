@@ -1,5 +1,5 @@
 const jwt = require('jsonwebtoken');
-const { SQL, PoolPromise } = require('../Config/db');
+const { SQL, PoolPromise } = require('../config/db');
 const bcrypt = require('bcrypt');
 const { saveLog } = require('../Middlewares/logger');
 

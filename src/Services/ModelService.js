@@ -1,5 +1,5 @@
 //Servicio para crear modelos de vehiculos
-const { SQL, PoolPromise } = require('../Config/db');
+const { SQL, PoolPromise } = require('../config/db');
 
 
 const createModelService = async (req, res) => {
