@@ -1,7 +1,6 @@
 //Servicio para poder guardar la configuracion de pago
-import { convertToObject } from 'typescript';
-import { pool,sql } from '../config/dbConfig';
-import { saveLog } from '../Middlewares/logger';
+const { SQL, PoolPromise } = require('../Config/db');
+const { saveLog } = require('../Middlewares/logger');
 
 const createService= async(req, res)=>{
     try{
@@ -9,20 +8,23 @@ const createService= async(req, res)=>{
         
         const pool = await PoolPromise;
         const result = await pool.request()
-            .input('type',sql.Varchar, type)
-            .input('amount', sql.Decimal,amount)
-            .query('INSERT INTO ConfiguracionPago(tipoPago, monto) VALUES (@type, @amount) IF NOT EXISTS (SELECT 1 FROM ConfiguracionPago WHERE tipoPago = @type);');
+            .input('type', SQL.VarChar, type)
+            .input('amount', SQL.Decimal, amount)
+            .input('idUser', SQL.Int, idUser)
+            .input('ip', SQL.VarChar, req.ip)
+            .execute('sp_InsertConfigPayment');
 
-        if(!result.rowsAffected[0]) return {result: false, message: 'Failed to create payment configuration'};
+        if(result.rowsAffected[0] === 0) return {result: false, message: 'Failed to create payment configuration'};
 
-        //Creamos un log
-        await saveLog(idUser, 'CREATE_PAYMENT_CONFIG', `Payment configuration created with type: ${type} and amount: ${amount}`, req.ip);
+        console.log('[INFO] createService: Payment configuration created successfully with type:', type, 'and amount:', amount);
+        return {result: true, message: 'Payment configuration created successfully'};
 
-        console.log("[INFO] createService: Payment configuration created successfully with type:", type, "and amount:", amount);
-        return {result: true, message: 'Payment configuration created Succesfully'};
     } catch(err){
         console.error('[ERROR] createService:', err);
-        return {result: false, message: 'Internal Server error, error Generated on the Service Layer'};
+        return {result: false, 
+            message: 'Internal Server error, error Generated on the Service Layer',
+            details: err.message
+        };
     }
 }
 
@@ -32,8 +34,8 @@ const updateService = async(req, res) =>{
 
         const pool = await PoolPromise;
         const result = await pool.request()
-            .input('id',sql.Int,id)
-            .input('amount',sql.Decimal,amount)
+            .input('id', SQL.Int, id)
+            .input('amount', SQL.Decimal, amount)
             .query('UPDATE ConfiguracionCobro SET monto = @amount WHERE idTipoCobro = @id;');
 
         if(!result.rowsAffected[0]) return {result: false, message: 'Failed to update payment configuration'};

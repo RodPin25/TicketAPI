@@ -1,6 +1,6 @@
 //Servicio para los tickets
-import { pool,sql } from '../config/dbConfig';
-import { saveLog } from '../Middlewares/logger';
+const { SQL, PoolPromise } = require('../Config/db');
+const { saveLog } = require('../Middlewares/logger');
 
 const createService = async(req, res)=>{
     try{
@@ -8,10 +8,11 @@ const createService = async(req, res)=>{
 
         const pool = await PoolPromise;
         const result = await pool.request()
-            .input('licensePlate',sql.Varchar,licensePlate)
-            .input('idPay',sql.Int,idPay)
-            .input('idUser',sql.Int,idUser)
-            .query('INSER INTO Tickets(pagado, idUser, placaVehiculo,idTipoCobro) VALUES(0,@idUser,@licensePlate,@idPay);');
+            .input('licensePlate', SQL.VarChar, licensePlate)
+            .input('idType', SQL.Int, idPay)
+            .input('idUser', SQL.Int, idUser)
+            .input('ip', SQL.VarChar, req.ip)
+            .execute('sp_CreateTicket');
 
         if(!result.rowsAffected[0]) return {result: false, message: 'Failed to create ticket'};
 
@@ -25,4 +26,8 @@ const createService = async(req, res)=>{
         console.error('[ERROR] createService:', err);
         return {result: false, message: 'Internal Server error, error Generated on the Service Layer'};
     }
+}
+
+module.exports = {
+    createService
 }
