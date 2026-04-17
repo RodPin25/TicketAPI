@@ -1,6 +1,5 @@
 //Servicio para los tickets
 const { SQL, PoolPromise } = require('../Config/db');
-const { saveLog } = require('../Middlewares/logger');
 
 const createService = async(req, res)=>{
     try{
@@ -16,9 +15,6 @@ const createService = async(req, res)=>{
 
         if(!result.rowsAffected[0]) return {result: false, message: 'Failed to create ticket'};
 
-        //Creamos un log
-        await saveLog(idUser, 'CREATE_TICKET',`Ticket created for a car with license plate: ${licensePlate}`, req.ip);
-
         console.log("[INFO] createService: Ticket created successfully for car with license plate:", licensePlate);
         return {result: true, message: 'Ticket created Succesfully'};
         
@@ -28,6 +24,28 @@ const createService = async(req, res)=>{
     }
 }
 
+const updateService = async(req, res)=>{
+    try{
+        const { idTicket, idUser, ip } = req.body;
+
+        const pool = await PoolPromise;
+        const result = await pool.request()
+            .input('idTicket',SQL.Int, idTicket)
+            .input('idUser', SQL.Int, idUser)
+            .input('ip', SQL.VarChar, ip)
+            .execute('sp_closeTicket');
+
+        if(!result.rowsAffected[0]) return {result: false, message: 'Failed to close ticket'};
+
+        console.log("[INFO] updateService: Ticket with ID", idTicket, "closed successfully");
+        return {result: true, message: 'Ticket closed Succesfully'};
+    } catch(err){
+        console.error('[ERROR] updateService:', err);
+        return {result: false, message: 'Internal Server error, error Generated on the Service Layer'};
+    }
+}
+
 module.exports = {
-    createService
+    createService,
+    updateService
 }
