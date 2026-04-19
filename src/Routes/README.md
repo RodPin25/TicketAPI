@@ -10,6 +10,7 @@ Definidas en `authRoutes.js`. Estas rutas son públicas y permiten la gestión d
 | Endpoint | Método | Descripción | Controlador |
 |----------|--------|-------------|-------------|
 | `/login` | `POST` | Autentica un usuario y devuelve un token JWT. | `authController` |
+| `/signup`| `POST` | Registra un nuevo usuario en el sistema. | `createController` |
 
 ### 2. Rutas de Creación y Gestión (`/api/create`)
 Definidas en `createRoutes.js`. **Todas estas rutas están protegidas** por el `AuthMiddleware`, lo que significa que requieren un token válido en los headers.

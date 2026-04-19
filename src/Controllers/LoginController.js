@@ -4,15 +4,14 @@ const authController = async (req, res) => {
     try {
         const { username, password } = req.body;
         
-        // Obtenemos los regex de las variables de entorno o usamos valores por defecto
-        const emailRegex = new RegExp(process.env.EMAIL_REGEX || '^[\\w-\\.]+@([\\w-]+\\.)+[\\w-]{2,4}$');
+        // Obtenemos los regex de las variables de entorno o usamos valores por defecto      
+        const usernameRegex = new RegExp(process.env.USERNAME_REGEX);
         const passwordRegex = new RegExp(process.env.PASSWORD_REGEX || '^.{6,}$');
 
-        // Validamos con expresiones regulares (si se desea validar el username como email)
-        if (username && !emailRegex.test(username)) {
-            // return res.status(400).json({message: 'Invalid email format'});
+        // Validamos con expresiones regulares (si se desea validar el username como email)  
+        if (username && !usernameRegex.test(username)) {
+            return res.status(400).json({message: 'Invalid username format'});
         }
-
         if (!username || !password) {
             return res.status(400).json({ message: 'Username and password are required' });
         }

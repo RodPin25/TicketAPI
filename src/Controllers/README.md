@@ -17,30 +17,40 @@ Maneja el registro de nuevos vehículos.
 ### 3. LoginController.js
 Controla el proceso de autenticación de usuarios.
 - **Función:** `authController`
-- **Cambios realizados:** 
+- **Cambios realizados:**
     - Convertido a función `async` para permitir el uso de `await`.
     - Añadido `module.exports` (faltaba anteriormente).
-    - Implementada validación de regex de forma segura.
-    - Sincronizado con el servicio de login para usar `username`/`password`.
+    - Implementada validación de regex de forma segura (`USERNAME_REGEX`).
+    - Mensajes de error unificados y descriptivos.
 
-### 4. ModelController.js
+### 4. SignUpController.js
+Maneja el registro de nuevos usuarios en el sistema.
+- **Función:** `createController`
+- **Cambios realizados:**
+    - Validación de formato para `username` y `password` usando Regex desde el entorno.
+    - Manejo de respuestas HTTP enriquecidas (201 para creación, 400 para conflictos o errores de formato).
+    - Integración con `SignUpService`.
+
+### 5. ModelController.js
 Gestiona la creación de modelos de vehículos.
 - **Función:** `modelController`
 - **Cambios realizados:** Estandarización de validaciones de campos requeridos.
 
-### 5. PaymentController.js
+### 6. PaymentController.js
 Controla la configuración de los montos de cobro.
 - **Funciones:** `createController`, `updateController`
-- **Cambios realizados:** 
+- **Cambios realizados:**
     - Se corrigió el nombre de la importación (`ConfiPayService` -> `ConfigPay`).
     - Se añadió `updateController` para permitir la actualización de montos, sincronizándolo con el servicio.
 
-### 6. TicketController.js
-Gestiona la creación y cierre de tickets de parqueo.
+### 7. TicketController.js
+Gestiona el flujo de peticiones para los tickets de parqueo.
 - **Funciones:** `createController`, `updateController`
-- **Cambios realizados:** Sincronización completa con `TicketService` para las operaciones de apertura y cierre de tickets.
+- **Cambios realizados:**
+    - **Validación de QR:** El `updateController` ahora espera y valida la presencia de `qrString` en el cuerpo de la petición para procesar el cierre del ticket.
+    - **Sincronización:** Ajustado para manejar la nueva estructura de respuesta que incluye el identificador del QR generado.
 
-### 7. TypeController.js
+### 8. TypeController.js
 Maneja los tipos de vehículos disponibles.
 - **Función:** `createController`
 - **Cambios realizados:** Renombrada la función interna para mantener la consistencia con el resto de los controladores.
@@ -50,7 +60,7 @@ Maneja los tipos de vehículos disponibles.
 ## Estándares de Implementación
 
 1. **Validación:** Cada controlador verifica que los campos obligatorios estén presentes en el `req.body` antes de llamar al servicio.
-2. **Códigos de Estado:** 
+2. **Códigos de Estado:**
     - `201 Created`: Para creaciones exitosas.
     - `200 OK`: Para actualizaciones o consultas exitosas.
     - `400 Bad Request`: Para errores de validación del cliente.

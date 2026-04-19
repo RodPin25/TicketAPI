@@ -22,22 +22,36 @@ Permite configurar y actualizar los montos de cobro por tipo de servicio.
 ### 4. LoginService.js
 Servicio crítico para la autenticación de usuarios y generación de tokens JWT.
 - **Función:** `authService`
-- **Cambios realizados:** 
+- **Cambios realizados:**
     - Se corrigieron variables no definidas (`email` y `userInfo`).
     - Ahora extrae correctamente la información del `recordset` devuelto por el SP.
     - Estandarización total a CommonJS para evitar conflictos con `jsonwebtoken` y `bcrypt`.
 
-### 5. ModelService.js
+### 5. SignUpService.js
+Gestiona la creación de nuevos usuarios con seguridad.
+- **Función:** `createService`
+- **Cambios realizados:**
+    - Implementación de hashing de contraseñas con `bcrypt`.
+    - Comparación de contraseñas (`password1` vs `password2`) en la capa de servicio.
+    - Ejecución del SP `sp_SignUpService` con parámetros de auditoría (IP).
+
+### 6. ModelService.js
 Maneja la creación de modelos específicos para las marcas de vehículos.
 - **Función:** `createModelService`
 - **Cambios realizados:** Se añadió el `await` faltante al `PoolPromise`, lo cual era un error crítico que impedía la conexión.
 
-### 6. TicketService.js
-Gestiona la creación de tickets de parqueo/cobro.
-- **Función:** `createService`
-- **Cambios realizados:** Se añadió el `module.exports` que faltaba y se estandarizó la lógica de logs.
+### 7. TicketService.js
+Gestiona el ciclo de vida completo de los tickets de parqueo (creación, cálculo de costos y cierre).
+- **Funciones:** `createService`, `updateService`, `calculateAmount` (interna)
+- **Cambios realizados:**
+    - **Generación de QR:** El `createService` ahora devuelve un `qrString` con el formato `IS-{idTicket}-GP3` para ser utilizado en el proceso de salida.
+    - **Validación de QR:** El `updateService` implementa una validación estricta de la cadena QR para asegurar la integridad del ticket antes de procesar el pago.
+    - **Cierre de Tickets:** Extrae el `idTicket` directamente del QR para proceder con el cálculo de monto y ejecución de `sp_closeTicket`.
+    - **Motor de Cálculo:** Se añadió `calculateAmount`, una función robusta que determina el monto a cobrar basándose en la diferencia de tiempo entre la entrada y la salida.
+    - **Soporte de Tarifas:** Soporte para `HORA`, `DIA` y `MEDIA HORA`.
+    - **Auditoría:** Integración de parámetros de IP y usuario en todas las operaciones para trazabilidad.
 
-### 7. TypeService.js
+### 8. TypeService.js
 Gestiona los tipos de vehículos (ej: Liviano, Pesado, Motocicleta).
 - **Función:** `createService`
 - **Cambios realizados:** Se eliminó la dependencia innecesaria de `@faker-js/faker`.
