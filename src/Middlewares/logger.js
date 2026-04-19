@@ -21,3 +21,5 @@ const saveLog = async (idUser, action, description, ip) => {
         console.error('[ERROR] saveLog:', err);
     }
 }
+
+module.exports = { saveLog };
