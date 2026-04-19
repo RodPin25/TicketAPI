@@ -14,7 +14,7 @@ const createService= async(req, res)=>{
             .input('ip', SQL.VarChar, req.ip)
             .execute('sp_InsertConfigPayment');
 
-        if(result.rowsAffected[0] === 0) return {result: false, message: 'Failed to create payment configuration'};
+        
 
         console.log('[INFO] createService: Payment configuration created successfully with type:', type, 'and amount:', amount);
         return {result: true, message: 'Payment configuration created successfully'};

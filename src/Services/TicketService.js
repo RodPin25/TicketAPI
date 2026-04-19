@@ -13,7 +13,7 @@ const createService = async(req, res)=>{
             .input('ip', SQL.VarChar, req.ip)
             .execute('sp_CreateTicket');
 
-        if(!result.rowsAffected[0]) return {result: false, message: 'Failed to create ticket'};
+
 
         console.log("[INFO] createService: Ticket created successfully for car with license plate:", licensePlate);
         return {result: true, message: 'Ticket created Succesfully', qrString:`IS-${result.recordset[0].idTicket}-GP3`};

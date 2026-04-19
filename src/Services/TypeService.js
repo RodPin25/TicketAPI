@@ -12,7 +12,6 @@ const createService= async(req, res)=>{
             .input('idUser', SQL.Int, idUser)
             .execute('sp_TypeService');
 
-        if(!result.rowsAffected[0]) return {result: false, message: 'Failed to create type'};
 
         console.log("[INFO] createService: Type created successfully with name:", name);
         return {result: true, message: 'Type created Succesfully'};

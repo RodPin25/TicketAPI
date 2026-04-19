@@ -16,7 +16,7 @@ const createModelService = async (req, res) => {
             .input('ip', SQL.VarChar, req.ip)
             .execute('sp_ModelService');
 
-        if(!result.rowsAffected[0]) return {result: false, message: 'Failed to create model'};
+        
 
         console.log("[INFO] createModelService: Model created successfully with name:", name);
         return {result: true, message: 'Model created Succesfully'};

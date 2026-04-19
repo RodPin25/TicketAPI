@@ -13,7 +13,7 @@ const authService = async (req,res)=>{
             .input('ip', SQL.VarChar, req.ip)
             .execute('sp_LoginService');
 
-        if(result.recordset.length === 0) return {result: false, message: 'Authentication failed, user not found'};
+        
 
         const results = result.recordset[0];
         const passwordMatch = await bcrypt.compare(password, results.password);

@@ -24,12 +24,8 @@ const createService = async (req) => { // Quitamos res porque esto es un service
             .input('ip', SQL.VarChar(50), ip)
             .execute('sp_SignUpService');
 
-        if (result.rowsAffected[0] > 0) {
             console.log("[INFO] New User created successfully");
             return { result: true, message: "User has been created" };
-        } else {
-            return { result: false, message: "No rows affected in database" };
-        }
 
     } catch (err) {
         // Capturamos si el SP lanza un RAISERROR (ej. usuario ya existe)

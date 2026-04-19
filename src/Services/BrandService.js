@@ -13,7 +13,7 @@ const createBrandService = async (req, res) =>{
             .input('ip', SQL.VarChar, req.ip)
             .execute('sp_InsertBrand');
 
-        if(!result.rowsAffected[0]) return {result: false, message: 'Failed to create brand'};
+        
 
         //Ya no creamos un log si no mas bien lo hacemos dentro del SP para optimizar el proceso
 

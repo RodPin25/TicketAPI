@@ -13,7 +13,7 @@ const createService = async(req, res)=> {
             .input('ip', SQL.VarChar, req.ip)
             .execute('sp_InsertCar');
 
-        if(result.rowsAffected[0] === 0) return {result: false, message: 'Car creation failed'};
+        
 
         console.log('[INFO] createService: Car created successfully with license plate:', licensePlate);
         return {result: true, message: 'Car created successfully'};
