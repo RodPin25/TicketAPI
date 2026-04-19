@@ -1,4 +1,4 @@
-const { SQL, pool } = require('../config/db'); // Asegúrate de usar 'pool' o 'PoolPromise' según tu export
+const { SQL, PoolPromise } = require('../config/db'); // Asegúrate de usar 'pool' o 'PoolPromise' según tu export
 const bcrypt = require('bcrypt');
 
 const createService = async (req) => { // Quitamos res porque esto es un service, no un controller
@@ -16,7 +16,7 @@ const createService = async (req) => { // Quitamos res porque esto es un service
         const hashed = await bcrypt.hash(password1, saltRounds);
 
         // 3. Conexión y ejecución del SP
-        const request = await pool; // Usando la lógica que ya probamos antes
+        const request = await PoolPromise; // Usando la lógica que ya probamos antes
         const result = await request.request()
             .input('username', SQL.VarChar(50), username)
             .input('password', SQL.VarChar(255), hashed)
