@@ -5,3 +5,5 @@ const {updateController} = require('../Controllers/TicketController');
 
 //Realizando el UPDATE
 router.post('/ticket',authMiddleware,updateController);
+
+module.exports = router;
