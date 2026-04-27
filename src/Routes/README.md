@@ -9,11 +9,11 @@ Definidas en `authRoutes.js`. Estas rutas son públicas y permiten la gestión d
 
 | Endpoint | Método | Descripción | Controlador |
 |----------|--------|-------------|-------------|
-| `/login` | `POST` | Autentica un usuario y devuelve un token JWT. | `authController` |
-| `/signup`| `POST` | Registra un nuevo usuario en el sistema. | `createController` |
+| `/login` | `POST` | Autentica un usuario y devuelve un token JWT. | `LoginController` |
+| `/signup`| `POST` | Registra un nuevo usuario en el sistema. | `SignUpController` |
 
-### 2. Rutas de Creación y Gestión (`/api/create`)
-Definidas en `createRoutes.js`. **Todas estas rutas están protegidas** por el `AuthMiddleware`, lo que significa que requieren un token válido en los headers.
+### 2. Rutas de Creación (`/api/create`)
+Definidas en `createRoutes.js`. Gestionan la inserción de nuevos registros. Protegidas por `AuthMiddleware`.
 
 | Endpoint | Método | Descripción | Controlador |
 |----------|--------|-------------|-------------|
@@ -21,20 +21,37 @@ Definidas en `createRoutes.js`. **Todas estas rutas están protegidas** por el `
 | `/cars` | `POST` | Registra un nuevo vehículo (placa, modelo). | `carController` |
 | `/models` | `POST` | Registra un nuevo modelo de vehículo. | `modelController` |
 | `/payments`| `POST` | Crea una nueva configuración de monto de cobro. | `paymentCreateController` |
-| `/payments`| `PUT`  | Actualiza un monto de cobro existente. | `paymentUpdateController` |
 | `/tickets` | `POST` | Genera un nuevo ticket de entrada. | `ticketCreateController` |
 | `/types` | `POST` | Registra un nuevo tipo de vehículo. | `typeCreateController` |
+
+### 3. Rutas de Actualización (`/api/update`)
+Definidas en `updateRoutes.js`. Gestionan la modificación de registros existentes. Protegidas por `AuthMiddleware`.
+
+| Endpoint | Método | Descripción | Controlador |
+|----------|--------|-------------|-------------|
+| `/ticket` | `POST` | Cierra un ticket de parqueo (actualiza estado). | `ticketUpdateController` |
+| `/catalog`| `POST` | Actualización genérica de catálogos (marcas, modelos, etc). | `genericUpdateController` |
+| `/payments`| `PUT`  | Actualiza un monto de cobro existente. | `paymentUpdateController` |
+
+### 4. Rutas de Consulta (`/api/retrieve`)
+Definidas en `consultarRoutes.js`. Gestionan la obtención de información. Protegidas por `AuthMiddleware`.
+
+| Endpoint | Método | Descripción | Controlador |
+|----------|--------|-------------|-------------|
+| `/catalog`| `POST` | Consulta información de catálogos con filtros opcionales. | `retrieveController` |
 
 ---
 
 ## Middlewares Utilizados
 
-- **AuthMiddleware:** Se encarga de validar el token JWT enviado por el cliente. Si el token es inválido o no está presente, la petición es rechazada con un código `401 Unauthorized`. Se aplica de forma global a todas las rutas en `createRoutes.js`.
+- **AuthMiddleware:** Valida el token JWT en los headers de la petición (`Authorization`). Si no es válido, retorna `401 Unauthorized`.
 
 ---
 
 ## Configuración en el Servidor (`app.js`)
 
-Las rutas se registran en la aplicación principal bajo los siguientes prefijos:
-- `app.use('/api/auth', authRoutes);`
-- `app.use('/api/create', createRoutes);`
+Prefijos registrados:
+- `/api/auth`
+- `/api/create`
+- `/api/update`
+- `/api/retrieve`

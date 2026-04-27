@@ -1,69 +1,49 @@
 # Capa de Controladores - Documentación
 
-Esta carpeta contiene los controladores de la aplicación, que actúan como intermediarios entre las rutas y los servicios. Su responsabilidad es validar la entrada básica, llamar a los servicios correspondientes y devolver la respuesta HTTP adecuada.
+Los controladores actúan como intermediarios entre las rutas y los servicios. Su responsabilidad principal es recibir la petición (req), validar que los datos necesarios estén presentes y enviar la respuesta (res) adecuada basada en el resultado del servicio.
 
 ## Controladores Disponibles
 
-### 1. BrandController.js
-Gestiona las peticiones relacionadas con las marcas de vehículos.
-- **Función:** `brandController`
-- **Cambios realizados:** Se corrigió la validación del resultado del servicio para manejar correctamente el objeto de respuesta.
+### Gestión de Catálogos
+- **BrandController.js**: Maneja la creación de marcas de vehículos.
+- **ModelController.js**: Maneja la creación de modelos de vehículos.
+- **TypeController.js**: Maneja la creación de tipos de vehículos (Sedán, SUV, etc).
+- **UpdateController.js**: Controlador genérico para actualizar cualquier catálogo mediante procedimientos almacenados.
+- **ConsultarController.js**: Controlador genérico para recuperar información de los catálogos.
 
-### 2. CarController.js
-Maneja el registro de nuevos vehículos.
-- **Función:** `carController`
-- **Cambios realizados:** Asegurada la consistencia en el manejo de respuestas y códigos de estado.
+### Gestión de Operaciones
+- **CarController.js**: Maneja el registro de vehículos vinculados a placas.
+- **TicketController.js**: Controla la creación de tickets de entrada y la actualización (cierre) de los mismos al salir.
+- **PaymentController.js**: Gestiona las configuraciones de costos y cobros.
 
-### 3. LoginController.js
-Controla el proceso de autenticación de usuarios.
-- **Función:** `authController`
-- **Cambios realizados:**
-    - Convertido a función `async` para permitir el uso de `await`.
-    - Añadido `module.exports` (faltaba anteriormente).
-    - Implementada validación de regex de forma segura (`USERNAME_REGEX`).
-    - Mensajes de error unificados y descriptivos.
-
-### 4. SignUpController.js
-Maneja el registro de nuevos usuarios en el sistema.
-- **Función:** `createController`
-- **Cambios realizados:**
-    - Validación de formato para `username` y `password` usando Regex desde el entorno.
-    - Manejo de respuestas HTTP enriquecidas (201 para creación, 400 para conflictos o errores de formato).
-    - Integración con `SignUpService`.
-
-### 5. ModelController.js
-Gestiona la creación de modelos de vehículos.
-- **Función:** `modelController`
-- **Cambios realizados:** Estandarización de validaciones de campos requeridos.
-
-### 6. PaymentController.js
-Controla la configuración de los montos de cobro.
-- **Funciones:** `createController`, `updateController`
-- **Cambios realizados:**
-    - Se corrigió el nombre de la importación (`ConfiPayService` -> `ConfigPay`).
-    - Se añadió `updateController` para permitir la actualización de montos, sincronizándolo con el servicio.
-
-### 7. TicketController.js
-Gestiona el flujo de peticiones para los tickets de parqueo.
-- **Funciones:** `createController`, `updateController`
-- **Cambios realizados:**
-    - **Validación de QR:** El `updateController` ahora espera y valida la presencia de `qrString` en el cuerpo de la petición para procesar el cierre del ticket.
-    - **Sincronización:** Ajustado para manejar la nueva estructura de respuesta que incluye el identificador del QR generado.
-
-### 8. TypeController.js
-Maneja los tipos de vehículos disponibles.
-- **Función:** `createController`
-- **Cambios realizados:** Renombrada la función interna para mantener la consistencia con el resto de los controladores.
+### Autenticación
+- **LoginController.js**: Procesa el inicio de sesión y generación de tokens.
+- **SignUpController.js**: Procesa el registro de nuevos usuarios.
 
 ---
 
-## Estándares de Implementación
+## Estructura Típica de un Controlador
 
-1. **Validación:** Cada controlador verifica que los campos obligatorios estén presentes en el `req.body` antes de llamar al servicio.
-2. **Códigos de Estado:**
-    - `201 Created`: Para creaciones exitosas.
-    - `200 OK`: Para actualizaciones o consultas exitosas.
-    - `400 Bad Request`: Para errores de validación del cliente.
-    - `401 Unauthorized`: Para fallos en la autenticación.
-    - `500 Internal Server Error`: Para errores no controlados o fallos en la capa de servicios.
-3. **Manejo de Respuestas:** Todas las respuestas devuelven un objeto JSON consistente para facilitar el consumo por parte del frontend.
+```javascript
+const service = require('../Services/ExampleService');
+
+const exampleController = async (req, res) => {
+    try {
+        // 1. Extracción de datos
+        const { field } = req.body;
+
+        // 2. Validación básica
+        if (!field) return res.status(400).json({ message: 'Missing fields' });
+
+        // 3. Llamada al servicio
+        const result = await service.doSomething(req);
+
+        // 4. Respuesta al cliente
+        if (!result.result) return res.status(400).json(result);
+        return res.status(200).json(result);
+    } catch (err) {
+        // 5. Manejo de errores inesperados
+        return res.status(500).json({ message: 'Internal Server Error' });
+    }
+}
+```
