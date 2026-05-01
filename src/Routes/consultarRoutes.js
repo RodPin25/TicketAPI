@@ -4,6 +4,6 @@ const authMiddleware = require('../Middlewares/AuthMiddleware');
 const { retrieveController } = require('../Controllers/ConsultarController');
 
 // Ruta para consultar catálogos e información
-router.post('/catalog', authMiddleware, retrieveController);
+router.get('/catalog', authMiddleware, retrieveController);
 
 module.exports = router;

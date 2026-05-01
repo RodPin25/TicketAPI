@@ -92,7 +92,9 @@ async function calculateAmount(idTicket) {
     // Aseguramos que al menos se cobre 1 unidad (hora o día)
     if (unidadesACobrar < 1) unidadesACobrar = 1;
 
-    const total = ticketData.montoCobro * unidadesACobrar;
+    const multiplicador = ticketData.multiplicador_tarifa || 1;
+    const subtotal = ticketData.montoCobro * unidadesACobrar;
+    const total = subtotal * multiplicador;
 
     return {
         total: total,
