@@ -14,6 +14,7 @@ app.use(cors());
 app.use(express.json());
 
 const PORT = process.env.PORT || 3000;
+const HOST = process.env.HOST;
 
 //Routes
 app.use('/api/auth',authRoutes);
@@ -22,6 +23,6 @@ app.use('/api/update',updateRoutes);
 app.use('/api/retrieve', consultarRoutes);
 
 //Listening
-app.listen(PORT, () => {
+app.listen(PORT, HOST, () => {
     console.log('Server is running and ready to listen');
 });
