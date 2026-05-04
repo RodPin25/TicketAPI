@@ -5,11 +5,20 @@ Los middlewares son funciones que se ejecutan durante el ciclo de petición-resp
 ## Middlewares Disponibles
 
 ### 1. AuthMiddleware.js
-Se encarga de la seguridad de la API.
+Se encarga de la seguridad y el control de acceso de la API.
+
+#### `authToken`
 - **Función:** Verifica la presencia y validez de un token JWT en el header `Authorization`.
 - **Comportamiento:**
-  - Si el token es válido, decodifica la información del usuario y permite que la petición continúe (`next()`).
-  - Si el token falta o es inválido, retorna un error `401 Unauthorized`.
+  - Si el token es válido, decodifica la información del usuario, la adjunta a `req.user` y permite que la petición continúe (`next()`).
+  - Si el token falta o es inválido, retorna un error `401` o `403`.
+
+#### `checkRole(roles)`
+- **Función:** Verifica si el usuario autenticado tiene uno de los roles permitidos.
+- **Parámetros:** `roles` (Array de strings) - Lista de roles autorizados (ej: `['admin', 'manager']`).
+- **Comportamiento:**
+  - Si el rol del usuario está en la lista, continúa.
+  - Si no, retorna un error `403 Forbidden`.
 
 ### 2. logger.js
 Se encarga de registrar las actividades del sistema en la base de datos.
@@ -20,9 +29,14 @@ Se encarga de registrar las actividades del sistema en la base de datos.
 
 ## Cómo aplicar un Middleware
 
-Para proteger una ruta, se inserta el middleware como segundo argumento en la definición de la misma:
+Para proteger una ruta por autenticación y rol:
 
 ```javascript
-const authMiddleware = require('../Middlewares/AuthMiddleware');
-router.post('/protected-route', authMiddleware, controller);
+const { authToken, checkRole } = require('../Middlewares/AuthMiddleware');
+
+// Solo autenticado
+router.get('/public-data', authToken, controller);
+
+// Autenticado y con rol de administrador
+router.get('/reports', authToken, checkRole(['admin']), controller);
 ```
