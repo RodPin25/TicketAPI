@@ -3,7 +3,7 @@ const {SQL, PoolPromise} = require('../config/db');
 const retrieveService = async (req)=>{
     //Vamos a consultar toda la informacion de la base de datos.
     try{
-        const {table, id, license} = req.body;
+        const {table, id, license} = req.query;
 
         const pool= await PoolPromise;
         const result = await pool.request()

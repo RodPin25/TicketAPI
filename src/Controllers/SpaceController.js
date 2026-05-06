@@ -1,7 +1,7 @@
 const {spaceService} = require('../Services/SpaceService');
 
 const spaceController = async (req,res) =>{
-    const {idParqueo}=req.body;
+    const {idParqueo}=req.query;
 
     if(!idParqueo) return res.status(400).json({message:'An ID is required'});
 

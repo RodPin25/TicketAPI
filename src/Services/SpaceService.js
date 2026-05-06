@@ -2,7 +2,7 @@ const {SQL, PoolPromise} = require('../config/db');
 
 const spaceService = async (req) =>{
     try{
-        const {idParqueo} = req.body;
+        const {idParqueo} = req.query;
 
         const pool = await PoolPromise;
         const result = await pool.request()
