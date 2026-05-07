@@ -40,13 +40,19 @@ const checkRole = (roles) => {
             return res.status(401).json({ message: 'User not authenticated' });
         }
 
-        if (!roles.includes(req.user.role)) {
-            return res.status(403).json({ 
-                message: `Access denied: insufficient permissions. Required roles: [${roles.join(', ')}]` 
-            });
+        // Siempre permitir el acceso si el rol es 'admin'
+        if (req.user.role === 'admin') {
+            return next();
         }
 
-        next();
+        // Verificar si el rol del usuario está dentro de los permitidos
+        if (roles.includes(req.user.role)) {
+            return next();
+        }
+
+        return res.status(403).json({ 
+            message: `Access denied: insufficient permissions. Required roles: [${roles.join(', ')}]` 
+        });
     };
 };
 

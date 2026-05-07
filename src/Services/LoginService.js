@@ -23,8 +23,8 @@ const authService = async (req,res)=>{
 
         //Creamos el Payload con la informacion del usuario
         const userPayload = {
-            email: results.email,
-            role: 'admin',
+            username: results.username,
+            role: results.role || 'user', // Usamos el rol de la BD o 'user' por defecto
             userId: results.idUser
         };
 
@@ -32,9 +32,9 @@ const authService = async (req,res)=>{
         const token = jwt.sign(userPayload, process.env.SECRET_KEY, {expiresIn: '3h'});
 
         //Generamos un log
-        await saveLog(userPayload.userId, 'LOGIN', `User with email: ${results.email} logged in successfully`, req.ip);
+        await saveLog(userPayload.userId, 'LOGIN', `User ${results.username} logged in successfully`, req.ip);
 
-        console.log("[INFO] authService: User authenticated successfully with email:", results.email);
+        console.log("[INFO] authService: User authenticated successfully:", results.username);
         return {result: true, message: 'Authentication successful, token generated', token: token};
     } catch(error){
         console.error('Error in authService:', error);
