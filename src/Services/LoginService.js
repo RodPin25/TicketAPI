@@ -21,10 +21,13 @@ const authService = async (req,res)=>{
         //Validamos la informacion de la contrasena
         if(!passwordMatch) return {result: false, message: 'Authentication failed, incorrect password'};
 
+        let role;
+        if(results.type === 1) role='admin'  
+
         //Creamos el Payload con la informacion del usuario
         const userPayload = {
             username: results.username,
-            role: results.role || 'user', // Usamos el rol de la BD o 'user' por defecto
+            role: role || 'user', // Usamos el rol de la BD o 'user' por defecto
             userId: results.idUser
         };
 
