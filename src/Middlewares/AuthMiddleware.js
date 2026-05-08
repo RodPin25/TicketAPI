@@ -56,7 +56,16 @@ const checkRole = (roles) => {
     };
 };
 
+const returnUser = (req, res) =>{
+    if(!req.user) {
+        return res.status(401).json({message: `Access denied: Invalid token provided`});
+    }
+
+    return res.status(200).json({user:req.user});
+}
+
 module.exports = {
     authToken,
-    checkRole
+    checkRole,
+    returnUser
 };
