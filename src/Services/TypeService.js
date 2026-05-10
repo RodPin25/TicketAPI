@@ -22,6 +22,20 @@ const createService= async(req, res)=>{
 
 }
 
+const getAllTypesService = async () => {
+    try {
+        const pool = await PoolPromise;
+        const result = await pool.request()
+            .query('SELECT idTipo, nombreTipo FROM TipoVehiculo WHERE statusTipo = 1');
+        
+        return { result: true, data: result.recordset };
+    } catch (err) {
+        console.error('[ERROR] getAllTypesService:', err);
+        return { result: false, message: 'Error retrieving vehicle types', details: err.message };
+    }
+}
+
 module.exports = {
-    createService
+    createService,
+    getAllTypesService
 }

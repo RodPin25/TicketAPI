@@ -20,6 +20,18 @@ const createController = async (req, res)=>{
     }
 }
 
+const getAllTypesController = async (req, res) => {
+    try {
+        const result = await typeService.getAllTypesService();
+        if (!result.result) return res.status(500).json(result);
+        return res.status(200).json(result);
+    } catch (err) {
+        console.error('[ERROR] getAllTypesController:', err);
+        return res.status(500).json({ result: false, message: 'Internal Server error' });
+    }
+}
+
 module.exports = {
-    createController
+    createController,
+    getAllTypesController
 }

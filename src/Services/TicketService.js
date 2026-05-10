@@ -24,19 +24,26 @@ const createService = async(req, res)=>{
     }
 }
 
+const getId = (qrString) => {
+    const parts = qrString.split('-');
+
+    if(!parts[0]==='IS' || !parts[2]==='GP3') return
+
+    const idTicket = parts[1];
+    return idTicket;
+}
+
 const updateService = async(req, res)=>{
     try{
-        const { qrString, idUser, ip } = req.body;
-
-        const parts = qrString.split('-');
-
-        if(!parts[0]==='IS' || !parts[2]==='GP3') return {result: false, message: 'Invalid QR String'}
-
-        const idTicket = parts[1];
+        const { qrString, idUser, ip, idPay, idType } = req.body;
 
         const pool = await PoolPromise;
 
-        const amount = await calculateAmount(idTicket);
+        const idTicket = getId(qrString);
+        if(!idTicket) return {result: false, message: 'Invalid QR code'};
+
+        const amount = await calculateAmount(qrString,idType,idPay);
+        if (!amount.result === false) return amount; // Si hay error en el cálculo
 
         const result = await pool.request()
             .input('idTicket',SQL.Int, idTicket)
@@ -56,10 +63,16 @@ const updateService = async(req, res)=>{
     }
 }
 
-async function calculateAmount(idTicket) {
+async function calculateAmount(qrString,idType,idPay) {
+    const idTicket = getId(qrString)
+
+    if(!idTicket) return {result:false, message:'QR String invalid'}
+
     const pool = await PoolPromise;
     const result = await pool.request()
         .input('idTicket', SQL.Int, idTicket)
+        .input('idType',SQL.Int,idType)
+        .input('idPay',SQL.Int,idPay)
         .execute('sp_GetTicketInfo');
 
     const ticketData = result.recordset[0];
@@ -68,28 +81,29 @@ async function calculateAmount(idTicket) {
     const horaEntrada = new Date(ticketData.horaEntrada);
     const horaActual = new Date();
     const diffMs = horaActual - horaEntrada;
+    const diffMinutos = diffMs / 60000;
 
+    const GRACE_PERIOD_MINS = 5;
     let unidadesACobrar = 0;
-    const tipo = ticketData.tipoCobro.toUpperCase(); // 'HORA' o 'DIA'
+    const tipo = ticketData.tipoCobro.toUpperCase(); // 'HORA', 'DIA', 'MEDIA HORA'
 
     if (tipo === 'HORA') {
-        // Convertimos ms a horas (1000 * 60 * 60)
-        const diffHoras = diffMs / 3600000;
-        unidadesACobrar = Math.ceil(diffHoras); 
+        const horasCompletas = Math.floor(diffMinutos / 60);
+        const minutosRestantes = diffMinutos % 60;
+        unidadesACobrar = minutosRestantes > GRACE_PERIOD_MINS ? horasCompletas + 1 : horasCompletas;
     } 
     else if (tipo === 'DIA') {
-        // Convertimos ms a días (1000 * 60 * 60 * 24)
-        const diffDias = diffMs / 86400000;
-        // Si entró hoy y sale hoy, se cobra 1 día mínimo
-        unidadesACobrar = Math.ceil(diffDias) || 1;
-    } else if(tipo==='MEDIA HORA'){
-        // Convertimos ms a medias horas
-        const diffDias = diffMs / 1800000;
-        // Si entró hoy y sale hoy, se cobra 1 día mínimo
-        unidadesACobrar = Math.ceil(diffDias) || 1;
+        const diasCompletos = Math.floor(diffMinutos / 1440);
+        const minutosRestantes = diffMinutos % 1440;
+        unidadesACobrar = minutosRestantes > GRACE_PERIOD_MINS ? diasCompletos + 1 : diasCompletos;
+    } 
+    else if(tipo === 'MEDIA HORA'){
+        const mediasCompletas = Math.floor(diffMinutos / 30);
+        const minutosRestantes = diffMinutos % 30;
+        unidadesACobrar = minutosRestantes > GRACE_PERIOD_MINS ? mediasCompletas + 1 : mediasCompletas;
     }
 
-    // Aseguramos que al menos se cobre 1 unidad (hora o día)
+    // Aseguramos que al menos se cobre 1 unidad
     if (unidadesACobrar < 1) unidadesACobrar = 1;
 
     const multiplicador = ticketData.multiplicador_tarifa || 1;
@@ -97,6 +111,7 @@ async function calculateAmount(idTicket) {
     const total = subtotal * multiplicador;
 
     return {
+        result: true,
         total: total,
         unidades: unidadesACobrar,
         tipo: tipo

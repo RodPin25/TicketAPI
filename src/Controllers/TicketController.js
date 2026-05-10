@@ -18,9 +18,11 @@ const createController = async (req, res)=>{
 
 const updateController = async (req, res)=>{
     try{
-        const { qrString } =req.body;
+        const { qrString, idUser, idPay, idType } = req.body;
 
-        if(!qrString) return res.status(400).json({result: false, message: 'Missing required fields'});
+        if(!qrString || !idUser || !idPay || !idType) {
+            return res.status(400).json({result: false, message: 'Missing required fields (qrString, idUser, idPay, idType)'});
+        }
 
         const result = await ticketService.updateService(req, res);
         if(!result.result) return res.status(500).json(result);

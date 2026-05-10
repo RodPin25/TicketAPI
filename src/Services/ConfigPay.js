@@ -52,7 +52,21 @@ const updateService = async(req, res) =>{
     }
 }
 
+const getAllConfigsService = async () => {
+    try {
+        const pool = await PoolPromise;
+        const result = await pool.request()
+            .query('SELECT idTipoCobro, tipoCobro, monto FROM ConfiguracionCobro');
+        
+        return { result: true, data: result.recordset };
+    } catch (err) {
+        console.error('[ERROR] getAllConfigsService:', err);
+        return { result: false, message: 'Error retrieving payment configurations', details: err.message };
+    }
+}
+
 module.exports = {
     createService,
-    updateService
+    updateService,
+    getAllConfigsService
 }

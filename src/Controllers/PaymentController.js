@@ -34,7 +34,19 @@ const updateController = async(req, res) => {
     }
 }
 
+const getAllConfigsController = async (req, res) => {
+    try {
+        const result = await configPayService.getAllConfigsService();
+        if (!result.result) return res.status(500).json(result);
+        return res.status(200).json(result);
+    } catch (err) {
+        console.error('[ERROR] getAllConfigsController:', err);
+        return res.status(500).json({ result: false, message: 'Internal Server error' });
+    }
+}
+
 module.exports = {
     createController,
-    updateController
+    updateController,
+    getAllConfigsController
 }
