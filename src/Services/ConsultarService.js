@@ -9,9 +9,9 @@ const retrieveService = async (req)=>{
 
         const pool= await PoolPromise;
         const result = await pool.request()
-            .input('Tabla',SQL.VarChar(20),table)
-            .input('Id', SQL.Int,id)
-            .input('Placa',SQL.VarChar(15),licensePlate)
+            .input('Tabla', SQL.VarChar(20), table)
+            .input('Id', SQL.Int, (id && id !== "") ? id : null)
+            .input('Placa', SQL.VarChar(15), (licensePlate && licensePlate !== "") ? licensePlate : null)
             .execute('sp_ConsultarCatalogos');
         
         console.log('[INFO] Se ha recivido informacion desde la base de datos');
