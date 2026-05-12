@@ -15,7 +15,7 @@ const retrieveService = async (req)=>{
             .execute('sp_ConsultarCatalogos');
         
         console.log('[INFO] Se ha recivido informacion desde la base de datos');
-        console.log(result.recordset);
+        console.log(result);
         return {result:true, message:'Info recibed succesfully', data: result.recordset[0]}
     } catch(err){
         console.error('[ERROR] ', err.message);
