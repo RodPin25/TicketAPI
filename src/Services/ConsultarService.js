@@ -5,6 +5,8 @@ const retrieveService = async (req)=>{
     try{
         const {table, id, license} = req.query;
 
+        console.log(`Table: ${table}, Id: ${id}, License: ${license}`);
+
         const pool= await PoolPromise;
         const result = await pool.request()
             .input('Tabla',SQL.VarChar(20),table)
