@@ -4,8 +4,6 @@ const retrieveController = async (req,res) => {
     try{
         const {table,id,licensePlate} = req.query;
 
-        if(!table || !id || !licensePlate) return res.status(400).json({message: 'Table, ID and License Plate are required'});
-
         const result = await service.retrieveService(req);
         
         if(!result.result) return res.status(400).json({message: result.message});
