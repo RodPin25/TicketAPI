@@ -36,7 +36,7 @@ const updateService = async(req, res) =>{
         const result = await pool.request()
             .input('id', SQL.Int, id)
             .input('amount', SQL.Decimal, amount)
-            .query('UPDATE ConfiguracionCobro SET monto = @amount WHERE idTipoCobro = @id;');
+            .query('UPDATE ConfiguracionCobro SET montoCobro = @amount WHERE idTipoCobro = @id;');
 
         if(!result.rowsAffected[0]) return {result: false, message: 'Failed to update payment configuration'};
 
@@ -56,7 +56,7 @@ const getAllConfigsService = async () => {
     try {
         const pool = await PoolPromise;
         const result = await pool.request()
-            .query('SELECT idTipoCobro, tipoCobro, monto FROM ConfiguracionCobro');
+            .query('SELECT idTipoCobro, tipoCobro, montoCobro FROM ConfiguracionCobro');
         
         return { result: true, data: result.recordset };
     } catch (err) {
