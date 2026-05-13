@@ -8,7 +8,7 @@ const todayTickets = async (idUser, ipCliente) =>{
             .input('ip',SQL.VarChar(50),ipCliente)
             .execute('sp_ObtenerTicketsHoy');
 
-        const data = result.recordset[0];
+        const data = result.recordset;
         if(!data) return {result:false, message:'No information retrieved'};
 
         console.log('[INFO] Information of today tickets has been retrieved');
