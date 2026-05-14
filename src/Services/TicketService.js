@@ -35,9 +35,11 @@ const getId = (qrString) => {
 
 const updateService = async(req, res)=>{
     try{
-        const { qrString, idUser, ip, idPay, idType } = req.body;
+        const { qrString, idType } = req.body;
 
         const pool = await PoolPromise;
+        const idUser = req.user.userId;
+        const ip = req.ip;
 
         const idTicket = getId(qrString);
         if(!idTicket) return {result: false, message: 'Invalid QR code'};

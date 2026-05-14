@@ -18,9 +18,9 @@ const createController = async (req, res)=>{
 
 const updateController = async (req, res)=>{
     try{
-        const { qrString, idUser, idPay, idType } = req.body;
+        const { qrString, idType } = req.body;
 
-        if(!qrString || !idUser || !idPay || !idType) {
+        if(!qrString || !idType) {
             return res.status(400).json({result: false, message: 'Missing required fields (qrString, idUser, idPay, idType)'});
         }
 
