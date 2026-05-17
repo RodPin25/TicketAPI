@@ -35,7 +35,7 @@ const getId = (qrString) => {
 
 const updateService = async(req, res)=>{
     try{
-        const { qrString, idType } = req.body;
+        const { qrString, idType,idPay } = req.body;
 
         const pool = await PoolPromise;
         const idUser = req.user.userId;
