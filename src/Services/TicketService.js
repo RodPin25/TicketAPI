@@ -78,13 +78,9 @@ const updateService = async(req, res)=>{
 }
 
 async function calculateAmount(qrString, idType, idPay) {
-    // 1. Validar parámetros de entrada mínimos antes de ir a la BD
-    if (!idType || !idPay) {
-        return { result: false, message: 'Missing vehicle type or payment type parameters' };
-    }
-
     const idTicket = getId(qrString);
     if (!idTicket) return { result: false, message: 'QR String invalid' };
+    console.log('[DEBUG] VARIABLES INGRESADAS: ', {idTicket, idType, idPay});
 
     try {
         const pool = await PoolPromise;
@@ -95,73 +91,32 @@ async function calculateAmount(qrString, idType, idPay) {
             .execute('sp_GetTicketInfo');
 
         const ticketData = result.recordset[0];
-        
-        // Si el ticket no existe o los INNER JOINs no hicieron match, result.recordset estará vacío
-        if (!ticketData) {
-            return { result: false, message: 'Ticket data could not be retrieved. Check IDs.' };
-        }
+        console.log('[DEBUG] TICKET DATA: ', ticketData);
+        if (!ticketData) return { result: false, message: 'Ticket not found' };
 
-        // 2. Mapeo seguro de variables con los nombres exactos del SP
-        const horaEntradaRaw = ticketData.horaEntrada;
-        if (!horaEntradaRaw) {
-            return { result: false, message: 'Check-in time is missing in the database record' };
-        }
-
-        const horaEntrada = new Date(horaEntradaRaw);
-        const horaActual = new Date();
-        const diffMs = horaActual - horaEntrada;
-        const diffMinutos = diffMs / 60000;
-
-        // Manejo seguro del string de tipo de cobro
-        const tipo = ticketData.tipoCobro ? ticketData.tipoCobro.toUpperCase().trim() : 'HORA'; 
-
+        const { diffMinutos, montoCobro, multiplicador_tarifa, tipoCobro } = ticketData;
         const GRACE_PERIOD_MINS = 5;
         let unidadesACobrar = 0;
 
-        // 3. Lógica de cálculo basada en el tipo de tarifa
-        if (tipo === 'HORA') {
-            const horasCompletas = Math.floor(diffMinutos / 60);
-            const minutosRestantes = diffMinutos % 60;
-            unidadesACobrar = minutosRestantes > GRACE_PERIOD_MINS ? horasCompletas + 1 : horasCompletas;
-        } 
-        else if (tipo === 'DIA' || tipo === 'DÍA') {
-            const diasCompletos = Math.floor(diffMinutos / 1440);
-            const minutosRestantes = diffMinutos % 1440;
-            unidadesACobrar = minutosRestantes > GRACE_PERIOD_MINS ? diasCompletos + 1 : diasCompletos;
-        } 
-        else if (tipo === 'MEDIA HORA') {
-            const mediasCompletas = Math.floor(diffMinutos / 30);
-            const minutosRestantes = diffMinutos % 30;
-            unidadesACobrar = minutosRestantes > GRACE_PERIOD_MINS ? mediasCompletas + 1 : mediasCompletas;
+        // Lógica de cálculo simplificada
+        if (tipoCobro.toUpperCase() === 'HORA') {
+            unidadesACobrar = Math.ceil(Math.max(0, diffMinutos - GRACE_PERIOD_MINS) / 60) || 1;
+        } else if (tipoCobro.toUpperCase() === 'MEDIA HORA') {
+            unidadesACobrar = Math.ceil(Math.max(0, diffMinutos - GRACE_PERIOD_MINS) / 30) || 1;
         } else {
-            // Por si acaso entra un tipo no mapeado en los IFs
-            unidadesACobrar = Math.ceil(diffMinutos / 60); 
+            unidadesACobrar = Math.ceil(Math.max(0, diffMinutos - GRACE_PERIOD_MINS) / 1440) || 1;
         }
 
-        // Aseguramos que al menos se cobre 1 unidad
-        if (unidadesACobrar < 1) unidadesACobrar = 1;
-
-        // 4. Operaciones matemáticas seguras (evitamos multiplicar por undefined o null)
-        const multiplicador = ticketData.multiplicador_tarifa !== undefined && ticketData.multiplicador_tarifa !== null 
-            ? ticketData.multiplicador_tarifa 
-            : 1;
-            
-        const montoCobro = ticketData.montoCobro || 0;
-
-        const subtotal = montoCobro * unidadesACobrar;
-        const total = subtotal * multiplicador;
+        const total = montoCobro * unidadesACobrar * (multiplicador_tarifa || 1);
 
         return {
             result: true,
-            total: Number(total.toFixed(2)), // Nos aseguramos de mantener dos decimales limpios
+            total: Number(total.toFixed(2)),
             unidades: unidadesACobrar,
-            tipo: tipo
+            tipo: tipoCobro
         };
-
     } catch (err) {
-        // Captura el RAISERROR de SQL Server directamente aquí
-        console.error('[ERROR] calculateAmount DB Exception:', err.message);
-        return { result: false, message: err.message || 'Error processing ticket pricing' };
+        return { result: false, message: err.message };
     }
 }
 
@@ -192,5 +147,6 @@ const filterService = async (params) => {
 module.exports = {
     createService,
     updateService,
+    calculateAmount,
     filterService
 }

@@ -35,7 +35,21 @@ const updateController = async (req, res)=>{
         return res.status(500).json({result: false, message: 'Internal Server error, error Generated on the Controller Layer'});
     }
 }
+const amountController = async (req, res)=> {
+    try{
+        const {qrString, idType, idPay} = req.body;
 
+        if(!qrString || !idType || !idPay) return res.status(400).json({result: false, message: 'Missing required fields (qrString, idUser, idPay, idType)'});
+
+        const result = await ticketService.calculateAmount(qrString,idType, idPay);
+        if(!result.result) return res.status(500).json(result);
+
+        return res.status(200).json(result.total);
+    } catch(err){
+        console.error('[ERROR] Failed to calculate amount:', err);
+        return res.status(500).json({result: false, message: 'Internal Server error, error Generated on the Controller Layer'});
+    }
+}
 const filterController = async (req, res) => {
     try {
         // Obtenemos los filtros desde req.query (ej: /api/tickets?licensePlate=ABC-123)
@@ -68,5 +82,6 @@ const filterController = async (req, res) => {
 module.exports={
     createController,
     updateController,
+    amountController,
     filterController
 }
