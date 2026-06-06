@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
-const { authToken } = require('../Middlewares/AuthMiddleware'); // Corregido nombre de carpeta y archivo
+const { authToken, checkRole } = require('../Middlewares/AuthMiddleware');
+
 
 //Importar las funciones específicas de los controladores
 const { brandController } = require('../Controllers/BrandController');
@@ -12,7 +13,7 @@ const { createController: typeCreateController } = require('../Controllers/TypeC
 
 //Crear las rutas
 // 1. Ruta para insertar una marca
-router.post('/brands', authToken, brandController);
+router.post('/brands', authToken,checkRole(['user']), brandController);
 
 // 2. Ruta para insertar un carro
 router.post('/cars', authToken, carController);

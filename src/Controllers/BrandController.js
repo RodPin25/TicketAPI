@@ -2,9 +2,14 @@ const brandService = require('../Services/BrandService');
 
 const brandController = async (req, res) => {
     try{
-        const { name, description, idUser } = req.body;
+        const { name, description } = req.body;
 
-        if(!name || !description || !idUser) {
+        console.log("=== Variables de entrada BrandService ===");
+        console.log(`name: ${name ? req.body.name : 'No name provided'}`);
+        console.log(`Description: ${description}`);
+        console.log(`idUser: ${req.user ? req.user.userId:'No user info in this request'}`);
+
+        if(!name || !description) {
             return res.status(400).json({message: 'Missing required fields: name, description, idUser'});
         }
 

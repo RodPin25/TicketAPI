@@ -4,12 +4,13 @@ const { SQL, PoolPromise } = require('../config/db');
 
 const createBrandService = async (req, res) =>{
     try{
-        const {name,description,idUser} = req.body;
+        const {name,description} = req.body;
+        const user = req.user;
         const pool = await PoolPromise;
         const result = await pool.request()
             .input('nombreMarca', SQL.VarChar, name)
             .input('descripcionMarca', SQL.VarChar, description)
-            .input('idUser', SQL.Int, idUser)
+            .input('idUser', SQL.Int, user.userId)
             .input('ip', SQL.VarChar, req.ip)
             .execute('sp_InsertBrand');
 

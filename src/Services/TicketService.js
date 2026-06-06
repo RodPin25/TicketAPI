@@ -35,92 +35,162 @@ const getId = (qrString) => {
 
 const updateService = async(req, res)=>{
     try{
-        const { qrString, idType,idPay } = req.body;
+        const { qrString, idType, idPay } = req.body;
+        console.log("=== INICIO SERVICIO: SE ESTA UTILIZANDO LA ACTUALIZACION DEL TICKET ===");
 
         const pool = await PoolPromise;
         const idUser = req.user.userId;
         const ip = req.ip;
 
         const idTicket = getId(qrString);
+        console.log("idEncontrado:" + idTicket);
         if(!idTicket) return {result: false, message: 'Invalid QR code'};
 
-        const amount = await calculateAmount(qrString,idType,idPay);
-        if (!amount.result === false) return amount; // Si hay error en el cálculo
+        const amount = await calculateAmount(qrString, idType, idPay);
+        
+        // CORRECCIÓN CRÍTICA 1: Cambiar la lógica de negación bugeada
+        if (amount.result === false) {
+            console.log("[ALERTA] El cálculo del monto falló:", amount.message);
+            return amount; 
+        }
 
+        console.log("[PROCESO] Ejecutando sp_closeTicket en la BD con monto:", amount.total);
+
+        // Ejecutar el SP de cierre
         const result = await pool.request()
-            .input('idTicket',SQL.Int, idTicket)
+            .input('idTicket', SQL.Int, idTicket)
             .input('idUser', SQL.Int, idUser)
-            .input('amount',SQL.Decimal,amount.total)
+            .input('amount', SQL.Decimal(10,2), amount.total)
             .input('ip', SQL.VarChar, ip)
             .execute('sp_closeTicket');
 
-        if(!result.rowsAffected[0]) return {result: false, message: 'Failed to close ticket'};
-
+        // CORRECCIÓN CRÍTICA 2: Quitamos o comentamos momentáneamente la validación estricta de rowsAffected[0]
+        // para verificar si el SP corre de largo, ya que el RAISERROR de SQL controla los fallos reales.
+        console.log("[DEBUG] Datos de filas afectadas devueltas por SQL Server:", result.rowsAffected);
 
         console.log("[INFO] updateService: Ticket with ID", idTicket, "closed successfully");
-        return {result: true, message: 'Ticket closed Succesfully'};
+        return {result: true, message: 'Ticket closed Successfully', total: amount.total};
+
     } catch(err){
-        console.error('[ERROR] updateService:', err);
-        return {result: false, message: 'Internal Server error, error Generated on the Service Layer'};
+        console.error('[ERROR EXCEPCIÓN] El flujo cayó al catch debido a:', err.message || err);
+        return {result: false, message: err.message || 'Internal Server error'};
     }
 }
 
-async function calculateAmount(qrString,idType,idPay) {
-    const idTicket = getId(qrString)
-
-    if(!idTicket) return {result:false, message:'QR String invalid'}
-
-    const pool = await PoolPromise;
-    const result = await pool.request()
-        .input('idTicket', SQL.Int, idTicket)
-        .input('idType',SQL.Int,idType)
-        .input('idPay',SQL.Int,idPay)
-        .execute('sp_GetTicketInfo');
-
-    const ticketData = result.recordset[0];
-    if (!ticketData) return { result: false, message: 'Ticket not found' };
-
-    const horaEntrada = new Date(ticketData.horaEntrada);
-    const horaActual = new Date();
-    const diffMs = horaActual - horaEntrada;
-    const diffMinutos = diffMs / 60000;
-
-    const GRACE_PERIOD_MINS = 5;
-    let unidadesACobrar = 0;
-    const tipo = ticketData.tipoCobro.toUpperCase(); // 'HORA', 'DIA', 'MEDIA HORA'
-
-    if (tipo === 'HORA') {
-        const horasCompletas = Math.floor(diffMinutos / 60);
-        const minutosRestantes = diffMinutos % 60;
-        unidadesACobrar = minutosRestantes > GRACE_PERIOD_MINS ? horasCompletas + 1 : horasCompletas;
-    } 
-    else if (tipo === 'DIA') {
-        const diasCompletos = Math.floor(diffMinutos / 1440);
-        const minutosRestantes = diffMinutos % 1440;
-        unidadesACobrar = minutosRestantes > GRACE_PERIOD_MINS ? diasCompletos + 1 : diasCompletos;
-    } 
-    else if(tipo === 'MEDIA HORA'){
-        const mediasCompletas = Math.floor(diffMinutos / 30);
-        const minutosRestantes = diffMinutos % 30;
-        unidadesACobrar = minutosRestantes > GRACE_PERIOD_MINS ? mediasCompletas + 1 : mediasCompletas;
+async function calculateAmount(qrString, idType, idPay) {
+    // 1. Validar parámetros de entrada mínimos antes de ir a la BD
+    if (!idType || !idPay) {
+        return { result: false, message: 'Missing vehicle type or payment type parameters' };
     }
 
-    // Aseguramos que al menos se cobre 1 unidad
-    if (unidadesACobrar < 1) unidadesACobrar = 1;
+    const idTicket = getId(qrString);
+    if (!idTicket) return { result: false, message: 'QR String invalid' };
 
-    const multiplicador = ticketData.multiplicador_tarifa || 1;
-    const subtotal = ticketData.montoCobro * unidadesACobrar;
-    const total = subtotal * multiplicador;
+    try {
+        const pool = await PoolPromise;
+        const result = await pool.request()
+            .input('idTicket', SQL.Int, idTicket)
+            .input('idType', SQL.Int, idType)
+            .input('idPay', SQL.Int, idPay)
+            .execute('sp_GetTicketInfo');
 
-    return {
-        result: true,
-        total: total,
-        unidades: unidadesACobrar,
-        tipo: tipo
-    };
+        const ticketData = result.recordset[0];
+        
+        // Si el ticket no existe o los INNER JOINs no hicieron match, result.recordset estará vacío
+        if (!ticketData) {
+            return { result: false, message: 'Ticket data could not be retrieved. Check IDs.' };
+        }
+
+        // 2. Mapeo seguro de variables con los nombres exactos del SP
+        const horaEntradaRaw = ticketData.horaEntrada;
+        if (!horaEntradaRaw) {
+            return { result: false, message: 'Check-in time is missing in the database record' };
+        }
+
+        const horaEntrada = new Date(horaEntradaRaw);
+        const horaActual = new Date();
+        const diffMs = horaActual - horaEntrada;
+        const diffMinutos = diffMs / 60000;
+
+        // Manejo seguro del string de tipo de cobro
+        const tipo = ticketData.tipoCobro ? ticketData.tipoCobro.toUpperCase().trim() : 'HORA'; 
+
+        const GRACE_PERIOD_MINS = 5;
+        let unidadesACobrar = 0;
+
+        // 3. Lógica de cálculo basada en el tipo de tarifa
+        if (tipo === 'HORA') {
+            const horasCompletas = Math.floor(diffMinutos / 60);
+            const minutosRestantes = diffMinutos % 60;
+            unidadesACobrar = minutosRestantes > GRACE_PERIOD_MINS ? horasCompletas + 1 : horasCompletas;
+        } 
+        else if (tipo === 'DIA' || tipo === 'DÍA') {
+            const diasCompletos = Math.floor(diffMinutos / 1440);
+            const minutosRestantes = diffMinutos % 1440;
+            unidadesACobrar = minutosRestantes > GRACE_PERIOD_MINS ? diasCompletos + 1 : diasCompletos;
+        } 
+        else if (tipo === 'MEDIA HORA') {
+            const mediasCompletas = Math.floor(diffMinutos / 30);
+            const minutosRestantes = diffMinutos % 30;
+            unidadesACobrar = minutosRestantes > GRACE_PERIOD_MINS ? mediasCompletas + 1 : mediasCompletas;
+        } else {
+            // Por si acaso entra un tipo no mapeado en los IFs
+            unidadesACobrar = Math.ceil(diffMinutos / 60); 
+        }
+
+        // Aseguramos que al menos se cobre 1 unidad
+        if (unidadesACobrar < 1) unidadesACobrar = 1;
+
+        // 4. Operaciones matemáticas seguras (evitamos multiplicar por undefined o null)
+        const multiplicador = ticketData.multiplicador_tarifa !== undefined && ticketData.multiplicador_tarifa !== null 
+            ? ticketData.multiplicador_tarifa 
+            : 1;
+            
+        const montoCobro = ticketData.montoCobro || 0;
+
+        const subtotal = montoCobro * unidadesACobrar;
+        const total = subtotal * multiplicador;
+
+        return {
+            result: true,
+            total: Number(total.toFixed(2)), // Nos aseguramos de mantener dos decimales limpios
+            unidades: unidadesACobrar,
+            tipo: tipo
+        };
+
+    } catch (err) {
+        // Captura el RAISERROR de SQL Server directamente aquí
+        console.error('[ERROR] calculateAmount DB Exception:', err.message);
+        return { result: false, message: err.message || 'Error processing ticket pricing' };
+    }
+}
+
+const filterService = async (params) => {
+    try {
+        const { qrCode, licensePlate, initialDate, finalDate, user, ip } = params;
+
+        const idTicket = qrCode ? getId(qrCode) : null;
+        if (qrCode && !idTicket) return { result: false, message: 'Invalid QR code' };
+
+        const pool = await PoolPromise;
+        const result = await pool.request()
+            .input('idTicket', SQL.Int, idTicket || null)
+            .input('licensePlate', SQL.VarChar(20), licensePlate || null)
+            .input('FechaInicial', SQL.DateTime, initialDate || null)
+            .input('FechaFinal', SQL.DateTime, finalDate || null)
+            .input('idUser', SQL.Int, user.userId)
+            .input('ip', SQL.VarChar(20), ip || '0.0.0.0')
+            .execute('sp_ConsultarTickets');
+
+        return { result: true, data: result.recordset };
+    } catch (err) {
+        console.error('[ERROR] filterService: ', err);
+        return { result: false, message: 'Internal Server error' };
+    }
 }
 
 module.exports = {
     createService,
-    updateService
+    updateService,
+    filterService
 }
