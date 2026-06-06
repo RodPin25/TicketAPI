@@ -20,7 +20,7 @@ const createService = async (req) => { // Quitamos res porque esto es un service
         const result = await request.request()
             .input('username', SQL.VarChar(50), username)
             .input('password', SQL.VarChar(255), hashed)
-            .input('type', SQL.Int, 1)
+            .input('type', SQL.Int, 2)
             .input('ip', SQL.VarChar(50), ip)
             .execute('sp_SignUpService');
 

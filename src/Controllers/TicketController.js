@@ -35,21 +35,36 @@ const updateController = async (req, res)=>{
         return res.status(500).json({result: false, message: 'Internal Server error, error Generated on the Controller Layer'});
     }
 }
-const amountController = async (req, res)=> {
-    try{
-        const {qrString, idType, idPay} = req.body;
+const amountController = async (req, res) => {
+    try {
+        // 1. Extraemos solo lo que el servicio NECESITA
+        const { qrString, idType, idPay } = req.query;
 
-        if(!qrString || !idType || !idPay) return res.status(400).json({result: false, message: 'Missing required fields (qrString, idUser, idPay, idType)'});
+        // 2. Validación coherente (sin idUser si no se usa)
+        if (!qrString || !idType || !idPay) {
+            return res.status(400).json({ 
+                result: false, 
+                message: 'Missing required fields (qrString, idPay, idType)' 
+            });
+        }
 
-        const result = await ticketService.calculateAmount(qrString,idType, idPay);
-        if(!result.result) return res.status(500).json(result);
+        // 3. Llamada al servicio con los parámetros correctos
+        const result = await ticketService.calculateAmount(qrString, idType, idPay);
+        
+        if (!result.result) {
+            return res.status(500).json(result);
+        }
 
-        return res.status(200).json(result.total);
-    } catch(err){
+        // 4. Retornar JSON limpio
+        return res.status(200).json(result); 
+    } catch (err) {
         console.error('[ERROR] Failed to calculate amount:', err);
-        return res.status(500).json({result: false, message: 'Internal Server error, error Generated on the Controller Layer'});
+        return res.status(500).json({ 
+            result: false, 
+            message: 'Internal Server error' 
+        });
     }
-}
+};
 const filterController = async (req, res) => {
     try {
         // Obtenemos los filtros desde req.query (ej: /api/tickets?licensePlate=ABC-123)
