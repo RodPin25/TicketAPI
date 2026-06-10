@@ -8,10 +8,13 @@ const {todayTicketsController} = require('../Controllers/TodayTicketsController'
 const { getAllTypesController } = require('../Controllers/TypeController');
 const { getAllConfigsController } = require('../Controllers/PaymentController');
 const { filterController, amountController } = require('../Controllers/TicketController');
+const {getReportController,getEstanciaReportController} = require('../Controllers/ReportsController');
 
 // Ruta para consultar catálogos e información - Protegida por rol de admin
 router.get('/catalog', authToken, checkRole(['user']), retrieveController);
 router.get('/incomes',authToken,checkRole(['admin']),incomeController);
+router.get('/daily-incomes',authToken,checkRole(['admin']),getReportController);
+router.get('/stay-report',authToken,checkRole(['admin']),getEstanciaReportController);
 
 //Rutas para consultar sin proteccion de admin
 router.get('/spaces',authToken,checkRole(['user']),spaceController);
